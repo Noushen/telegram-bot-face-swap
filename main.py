@@ -1,14 +1,11 @@
-from flask import Flask
-from flask_sslify import SSLify
+import flask
 
+server = flask.Flask(__name__)
 
-app = Flask(__name__)
-sslify = SSLify(app)
-
-@app.route('/')
+@server.route('/')
 def index():
     return '<h1> My app </h1>'
 
 
 if __name__ == '__main__':
-    app.run()
+    server.run()
