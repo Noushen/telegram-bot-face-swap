@@ -30,16 +30,12 @@ type_swap_flag = {}
 current_step = {}
 bot_classes = {}
 
-find_flood = {}
-
 
 def bot_answers(chat_id):
     bot_class = bot_classes.get(chat_id)
     if bot_class:
         if bot_class.message_type == 'text':
             if bot_class.text_message == '/start':
-                if find_flood.get(chat_id):
-                    del find_flood[chat_id]
                 current_step[chat_id] = 1
                 bot_class.send_message(chat_id,
                                        'Приветсвую.\n'
@@ -48,8 +44,6 @@ def bot_answers(chat_id):
                                        'С этой фотографии будет взято лицо')
     
             elif bot_class.text_message == '/pretty':
-                if find_flood.get(chat_id):
-                    del find_flood[chat_id]
                 type_swap_flag[chat_id] = False
                 bot_class.send_message(chat_id,
                                        'Вы выбрали вариант с частичной заменой лица\n'
@@ -57,8 +51,6 @@ def bot_answers(chat_id):
                                        '/swap')
     
             elif bot_class.text_message == '/ugly':
-                if find_flood.get(chat_id):
-                    del find_flood[chat_id]
                 type_swap_flag[chat_id] = True
                 bot_class.send_message(chat_id,
                                        'Вы выбрали вариант с полной заменой лица\n'
@@ -66,20 +58,14 @@ def bot_answers(chat_id):
                                        '/swap')
     
             elif bot_class.text_message == '/change_photo_1':
-                if find_flood.get(chat_id):
-                    del find_flood[chat_id]
                 current_step[chat_id] = 4
                 bot_class.send_message(chat_id, 'Отправьте фотографию откуда будет взято лицо')
     
             elif bot_class.text_message == '/change_photo_2':
-                if find_flood.get(chat_id):
-                    del find_flood[chat_id]
                 current_step[chat_id] = 5
                 bot_class.send_message(chat_id, 'Отправьте фотографию куда будет перенесено лицо')
     
             elif bot_class.text_message == '/first_photo':
-                if find_flood.get(chat_id):
-                    del find_flood[chat_id]
                 unknown_photo_name = DOWNLOAD_FOLDER + '{}_3.jpg'.format(chat_id)
                 if os.path.isfile(unknown_photo_name):
                     source_photo_name = DOWNLOAD_FOLDER + '{}_1.jpg'.format(chat_id)
@@ -100,8 +86,6 @@ def bot_answers(chat_id):
                                                     '/start')
     
             elif bot_class.text_message == '/second_photo':
-                if find_flood.get(chat_id):
-                    del find_flood[chat_id]
                 unknown_photo_name = DOWNLOAD_FOLDER + '{}_3.jpg'.format(chat_id)
                 if os.path.isfile(unknown_photo_name):
                     target_photo_name = DOWNLOAD_FOLDER + '{}_2.jpg'.format(chat_id)
@@ -122,58 +106,45 @@ def bot_answers(chat_id):
                                                     '/start')
     
             elif bot_class.text_message == '/swap':
-                flood = find_flood.get(chat_id)
+                if first_photo_flag.get(chat_id) and second_photo_flag.get(chat_id):
 
-                if flood:
-                    bot_class.send_message(chat_id, 'Вы уже получили такую фотографию.\n'
-                                                    'Попробуйте изменить настройки или поменять фотографии,'
-                                                    ' прежде чем запускать снова:\n'
+                    if type_swap_flag.get(chat_id):
+                        result_img = ugly_face_swap(DOWNLOAD_FOLDER + '{}_1.jpg'.format(chat_id),
+                                                    DOWNLOAD_FOLDER + '{}_2.jpg'.format(chat_id),
+                                                    PREDICTOR_PATH)
+                        cv2.imwrite(RESULT_PATH.format(chat_id), result_img)
+                        bot_class.send_photo(chat_id, RESULT_PATH.format(chat_id))
+
+                    else:
+                        result_img = pretty_face_swap(DOWNLOAD_FOLDER + '{}_1.jpg'.format(chat_id),
+                                                      DOWNLOAD_FOLDER + '{}_2.jpg'.format(chat_id),
+                                                      PREDICTOR_PATH)
+                        cv2.imwrite(RESULT_PATH.format(chat_id), result_img)
+                        bot_class.send_photo(chat_id, RESULT_PATH.format(chat_id))
+
+                    bot_class.send_message(chat_id, 'Готово!\n'
+                                                    'Можете попробовать это с другими фотографиями '
+                                                    'или другим типом замены лица:\n'
                                                     '/pretty - изменить тип замены лица на частичную\n'
                                                     '/ugly - изменить тип замены лица на полную\n'
                                                     '/change_photo_1 - изменить фотографию источник (1)\n'
                                                     '/change_photo_2 - изменить целевую фотографию (2)')
 
+                elif first_photo_flag.get(chat_id):
+                    current_step[chat_id] = 5
+                    bot_class.send_message(chat_id, 'Нет целевой фотографии (2)\n'
+                                                    'Отправьте её')
+
+                elif second_photo_flag.get(chat_id):
+                    current_step[chat_id] = 4
+                    bot_class.send_message(chat_id, 'Нет фотографии источника (1)\n'
+                                                    'Отправьте её')
+
                 else:
-                    find_flood[chat_id] = True
-                    if first_photo_flag.get(chat_id) and second_photo_flag.get(chat_id):
-
-                        if type_swap_flag.get(chat_id):
-                            result_img = ugly_face_swap(DOWNLOAD_FOLDER + '{}_1.jpg'.format(chat_id),
-                                                        DOWNLOAD_FOLDER + '{}_2.jpg'.format(chat_id),
-                                                        PREDICTOR_PATH)
-                            cv2.imwrite(RESULT_PATH.format(chat_id), result_img)
-                            bot_class.send_photo(chat_id, RESULT_PATH.format(chat_id))
-
-                        else:
-                            result_img = pretty_face_swap(DOWNLOAD_FOLDER + '{}_1.jpg'.format(chat_id),
-                                                          DOWNLOAD_FOLDER + '{}_2.jpg'.format(chat_id),
-                                                          PREDICTOR_PATH)
-                            cv2.imwrite(RESULT_PATH.format(chat_id), result_img)
-                            bot_class.send_photo(chat_id, RESULT_PATH.format(chat_id))
-
-                        bot_class.send_message(chat_id, 'Готово!\n'
-                                                        'Можете попробовать это с другими фотографиями '
-                                                        'или другим типом замены лица:\n'
-                                                        '/pretty - изменить тип замены лица на частичную\n'
-                                                        '/ugly - изменить тип замены лица на полную\n'
-                                                        '/change_photo_1 - изменить фотографию источник (1)\n'
-                                                        '/change_photo_2 - изменить целевую фотографию (2)')
-
-                    elif first_photo_flag.get(chat_id):
-                        current_step[chat_id] = 5
-                        bot_class.send_message(chat_id, 'Нет целевой фотографии (2)\n'
-                                                        'Отправьте её')
-
-                    elif second_photo_flag.get(chat_id):
-                        current_step[chat_id] = 4
-                        bot_class.send_message(chat_id, 'Нет фотографии источника (1)\n'
-                                                        'Отправьте её')
-
-                    else:
-                        bot_class.send_message(chat_id,
-                                               'Вы ещё не отправили фотографии.\n'
-                                               'Введите команду - /start\n'
-                                               'И отправьте фотографии по очереди')
+                    bot_class.send_message(chat_id,
+                                           'Вы ещё не отправили фотографии.\n'
+                                           'Введите команду - /start\n'
+                                           'И отправьте фотографии по очереди')
     
         elif bot_class.message_type == 'photo':
     
