@@ -60,7 +60,7 @@ class TelegramBot:
         if self.post and self.post['message'].get('text'):
                 return self.post['message']['text']
 
-    def download_file(self, file_id, filename, folder):
+    def download_file(self, file_id, filename_path):
         if self.api_url:
             url = self.api_url + 'getFile?file_id={}'.format(file_id)
             r = requests.get(url)
@@ -69,7 +69,7 @@ class TelegramBot:
                 file_path = json_data['result']['file_path']
                 download_url = self.file_url + file_path
                 file = requests.get(download_url)
-                with open(folder + filename, 'wb') as f:
+                with open(filename_path, 'wb') as f:
                     f.write(file.content)
 
     def send_photo(self, chat_id, photo_path):

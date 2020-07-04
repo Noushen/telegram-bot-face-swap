@@ -1,2 +1,7 @@
 flask
 gunicorn
+requests
+numpy
+scipy
+opencv-python
+dlib

@@ -11,7 +11,6 @@ def find_face(img):
         first_face = faces[0]
         return first_face
     else:
-        print('No face')
         return faces
 
 
